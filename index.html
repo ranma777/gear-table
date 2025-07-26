@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>機材管理テーブル（経過日数と1日コスト付き）</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; margin-top: 20px; }
+        button { margin: 5px; }
+        td input { width: 100%; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+<h2>🛠️ 機材リスト（経過日数＆1日あたりのコスト自動計算）</h2>
+<button onclick="addRow()">＋ 行を追加</button>
+
+<table id="gearTable" class="display">
+    <thead>
+        <tr>
+            <th>機材名</th>
+            <th>購入日</th>
+            <th>価格（円）</th>
+            <th>購入店舗</th>
+            <th>経過日数</th>
+            <th>1日あたりのコスト（円）</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td contenteditable="true">MacBook Air M1</td>
+            <td contenteditable="true">2022-08-05</td>
+            <td contenteditable="true">140000</td>
+            <td contenteditable="true">Apple Store</td>
+            <td class="daysElapsed"></td>
+            <td class="dailyCost"></td>
+            <td><button onclick="deleteRow(this)">削除</button></td>
+        </tr>
+        <tr>
+            <td contenteditable="true">DELL G15</td>
+            <td contenteditable="true">2023-05-12</td>
+            <td contenteditable="true">160000</td>
+            <td contenteditable="true">Amazon</td>
+            <td class="daysElapsed"></td>
+            <td class="dailyCost"></td>
+            <td><button onclick="deleteRow(this)">削除</button></td>
+        </tr>
+        <tr>
+            <td contenteditable="true">YAMAHA NS-7</td>
+            <td contenteditable="true">2023-10-15</td>
+            <td contenteditable="true">25000</td>
+            <td contenteditable="true">中古楽器屋</td>
+            <td class="daysElapsed"></td>
+            <td class="dailyCost"></td>
+            <td><button onclick="deleteRow(this)">削除</button></td>
+        </tr>
+        <tr>
+            <td contenteditable="true">JBL DUO</td>
+            <td contenteditable="true">2024-02-20</td>
+            <td contenteditable="true">10000</td>
+            <td contenteditable="true">ヨドバシ</td>
+            <td class="daysElapsed"></td>
+            <td class="dailyCost"></td>
+            <td><button onclick="deleteRow(this)">削除</button></td>
+        </tr>
+    </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    let table;
+    $(document).ready(function () {
+        table = $('#gearTable').DataTable();
+        updateTable();
+    });
+
+    function addRow() {
+        const newRow = table.row.add([
+            '<td contenteditable="true">新しい機材</td>',
+            '<td contenteditable="true">2025-01-01</td>',
+            '<td contenteditable="true">0</td>',
+            '<td contenteditable="true">未記入</td>',
+            '<td class="daysElapsed"></td>',
+            '<td class="dailyCost"></td>',
+            '<button onclick="deleteRow(this)">削除</button>'
+        ]).draw(false).node();
+
+        $(newRow).find('td').attr('contenteditable', true);
+        $(newRow).find('td:last').removeAttr('contenteditable');
+        updateTable();
+    }
+
+    function deleteRow(btn) {
+        const row = $(btn).closest('tr');
+        table.row(row).remove().draw();
+        updateTable();
+    }
+
+    function updateTable() {
+        const today = new Date();
+        $('#gearTable tbody tr').each(function () {
+            const cells = $(this).find('td');
+            const dateText = cells.eq(1).text().trim();
+            const priceText = cells.eq(2).text().trim().replace(/,/g, '');
+            const daysCell = cells.eq(4);
+            const costCell = cells.eq(5);
+
+            let days = "-";
+            let dailyCost = "-";
+
+            if (dateText && priceText && !isNaN(priceText)) {
+                const purchaseDate = new Date(dateText);
+                if (!isNaN(purchaseDate)) {
+                    const diffDays = Math.max(1, Math.floor((today - purchaseDate) / (1000 * 60 * 60 * 24)));
+                    days = diffDays;
+                    dailyCost = (parseFloat(priceText) / diffDays).toFixed(2);
+                }
+            }
+
+            daysCell.text(days);
+            costCell.text(dailyCost);
+        });
+    }
+
+    $(document).on('input', 'td', function () {
+        updateTable();
+    });
+</script>
+
+</body>
+</html>
